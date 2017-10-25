@@ -28,4 +28,3 @@ def human_match():
       play = play or "Y"
 
 human_match()
-

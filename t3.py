@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 This is a simple set of classes for playing Tic-Tac-Toe
@@ -11,9 +11,9 @@ With a game start with X0 O8, X could play at X1 and lose.
 
 However, since the game begins with X4, it's self-consistent.
 """
-__author__    = "Both of Your, Team Members"
-__copyright__ = "Copyright 2017 You Again"
-__email__     = "andeven emails"
+__author__    = "Adriana Rakshana, Julia Karon"
+__copyright__ = "Copyright 2017 Rakshana and Karon"
+__email__     = "iarakshana@uchicago.edu and jkaron@uchicago.edu"
 
 import sys
 import random
@@ -59,7 +59,7 @@ class monkey(player):
 
     self.mark = mark
     self.other_mark = "XO"[mark == "X"]
-  
+
   pass
 
 
@@ -87,6 +87,15 @@ class computer(player):
   """
   This is the class to be specialized by students.
   """
+  def __init__(self, mark):
+    """
+    :param mark: the class simply knows its marker (X or O).
+    """
+
+    assert(mark in "XO")
+
+    self.mark = mark
+    self.other_mark = "XO"[mark == "X"]
 
   def move(self, match):
     """
@@ -97,31 +106,95 @@ class computer(player):
     """
 
     #1# Win if possible.
+    self_wins = match.check_for_wins(self.mark)
+
+    if self_wins != None:
+        return self_wins
+#selfwins checks for number of wins for the player mark
+#and so if there is a way to win we play it
+
 
     #2# Block wins, if possible.
+    other_wins = match.check_for_wins(self.other_mark)
+
+    if other_wins != None:
+        return other_wins
+#if there is a way for the other player to win we play in that spot
+#to block their win
 
     #3# Fork.
+    fork_twos = match.check_for_twos(self.mark)
 
-    #4# Force Defense.
+    for i in fork_twos:
+        if fork_twos[i] ==2:
+            return i
+#if there are two ways to win for the player we play there
+
+    #4# Fork Defense.
+    # Get posible squares to play for a "two"
+    self_twos = match.check_for_twos(self.mark)
+
+# We'll now consider hypothetical games,
+# where we play in each of the "two" positions.
+    for i in self_twos:                 # For each of these
+        hypo_match = dc(match)          # create a copy of the game -- dc is deepcopy
+        hypo_match.board[i] = self.mark # try playing there.
+
+    # Now look for the win implied by your "two".
+    # Your opponent would have to play here.
+        w = hypo_match.check_for_wins(self.mark)
+
+    # For your OPPPONENT, get any potential twos.
+        hypo_twos = hypo_match.check_for_twos(self.other_mark)
+
+    # If your potential win is not just a two for them,
+    # but in fact a DOUBLE two -- a fork -- don't move here!
+        if w in hypo_twos and hypo_twos[w] > 1: continue
+
+    # Otherwise, it meets the condition.  Do it!!
+        return i
 
     #5# Block a fork.
+    opponent_fork = match.check_for_twos(self.other_mark)
+
+    for i in opponent_fork:
+        if opponent_fork[i] == 2:
+            return i
+#if other player is trying to play to create a fork, i.e. ==2 then we play there
 
     #6# Center.
 
+    if not match.board[4]:
+        return 4
+#4 is the centre of the board
+
     #7# Opposite corner.
+
+    for i in [0, 2, 6, 8]:
+        if match.board[i] == self.other_mark:
+            if not match.board[8 - i]:
+                return (8 - i)
+#we play in the 8-i location as that will be the opposite corner
 
     #8# Empty corner.
 
+    for i in [0, 2, 6, 8]:
+        if not match.board[i]:
+            return i
+
     #9# Side
+    for i in [1, 3, 5, 7]:
+        if not match.board[i]:
+            return i
+
 
     return random.choice([i for i in range(9) if not match.board[i]])
-
 
 
 class game():
   """
   game contains two players -- humans, monkeys, or computers --
-  who then play in a loop.  
+  who then play in a loop.
   """
 
   mini_num = "012345678"
@@ -134,7 +207,7 @@ class game():
     """
     Create a new game.
 
-    :parame hmark: the marker for the human player 
+    :parame hmark: the marker for the human player
     :parame c1:    the class of computer 1, by default a monkey (random)
     :parame c2:    the class of computer 2, by default a monkey (random)
     """
@@ -162,15 +235,15 @@ class game():
 
 
   def __str__(self):
-    
+
     s = ""
     for n in range(9):
 
       if not (n%3): s += "\n"
 
       if self.board[n]:
-        s += self.board[n] 
-      else: s += game.mini_num[n] 
+        s += self.board[n]
+      else: s += game.mini_num[n]
       s += " "
 
     s += "\n"
@@ -181,7 +254,7 @@ class game():
   def play(self):
     """
     play is just a (max) 9 iteration loop
-    between the two players defined, 
+    between the two players defined,
     which returns the winning player (or None).
     """
 
@@ -205,7 +278,7 @@ class game():
       if self.moves == 9: print("It is a draw.")
 
     return winner
-    
+
 
   def check_move(self, move):
     """
@@ -215,7 +288,7 @@ class game():
     :param move: proposed move
     :return: boolean True if move is legal, otherwise False.
     """
-    
+
     if type(move) != int or \
        move > 8 or move < 0:
       print("I require an integer, 0-8!")
@@ -244,7 +317,7 @@ class game():
       for three in game.threes:
         if all(self.board[sq] == m for sq in three):
           return m
-      
+
     # Return the winner.  Game will end.
     return ""
 
@@ -256,9 +329,9 @@ class game():
     """
 
     for three in game.threes:
-      if sum(self.board[cell] == mark for cell in three) == 2: 
+      if sum(self.board[cell] == mark for cell in three) == 2:
         for cell in three:
-          if self.board[cell] == None: 
+          if self.board[cell] == None:
             return cell
 
     return None
@@ -280,5 +353,3 @@ class game():
             else: twos[cell] = 1
 
     return twos
-
-
